@@ -44,6 +44,12 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- BCrypt 密码加密：只引入 spring-security 的加密模块(不含完整安全框架)，用 BCryptPasswordEncoder 加密用户密码 -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
+
         <!-- 3. MyBatis-Plus：ORM 框架，用 Java 对象操作数据库表，比手写 SQL 省事。阶段3起大量用 -->
         <dependency>
             <groupId>com.baomidou</groupId>

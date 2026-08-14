@@ -1,5 +1,6 @@
 package com.campus.secondhand;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -12,7 +13,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *   - @EnableAutoConfiguration：开启自动配置（Spring Boot 的核心魔法，根据依赖自动装配）
  *   - @ComponentScan：扫描当前包(com.campus.secondhand)及其子包下的所有组件
  *                     所以后面的 Controller/Service/Mapper 都要写在这个包或子包下，才能被扫到
+ *
+ * @MapperScan：扫描 mapper 包下的所有 Mapper 接口，让 MyBatis-Plus 给它们生成实现类并注册成 Bean。
+ *              这样每个 Mapper 就不用单独加 @Mapper 注解了。
  */
+@MapperScan("com.campus.secondhand.mapper")
 @SpringBootApplication
 public class CampusSecondhandApplication {
 
