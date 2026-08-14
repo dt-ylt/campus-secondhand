@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 父工程：继承 Spring Boot，它会帮你统一管理所有依赖的版本号，你下面写依赖就不用一个个写 version 了 -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.7.18</version>
+        <relativePath/>
+    </parent>
+
+    <!-- 项目坐标：相当于项目的身份证，groupId+artifactId 唯一标识这个项目 -->
+    <groupId>com.campus</groupId>
+    <artifactId>secondhand</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>campus-secondhand</name>
+    <description>校园二手闲置交易平台后端</description>
+
+    <properties>
+        <!-- 用 Java 17 编译运行 -->
+        <java.version>17</java.version>
+        <!-- 源码编码强制 UTF-8，避免 Windows 中文系统(GBK)下中文注释/字符串乱码 -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <!-- 下面几个版本号抽出来集中管理，改版本只改这一处 -->
+        <mybatis-plus.version>3.5.3.1</mybatis-plus.version>
+        <jjwt.version>0.11.5</jjwt.version>
+        <minio.version>8.5.7</minio.version>
+    </properties>
+
+    <dependencies>
+        <!-- 1. Web 起步依赖：写 REST 接口(@RestController/@GetMapping 等)靠它，内含 Spring MVC + 内嵌 Tomcat -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- 2. 参数校验：用 @NotBlank/@NotNull 等注解校验请求参数，少写 if 判断 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- 3. MyBatis-Plus：ORM 框架，用 Java 对象操作数据库表，比手写 SQL 省事。阶段3起大量用 -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <version>${mybatis-plus.version}</version>
+        </dependency>
+
+        <!-- 4. MySQL 驱动：程序连 MySQL 用的。scope=runtime 表示只在运行时需要，编译时用不到。
+             注意坑：MySQL 从 8.0.31 起把驱动包名从 mysql:mysql-connector-java 改成了 com.mysql:mysql-connector-j，
+             Spring Boot 2.7.18 的父工程管理的是新包名，所以这里用新名；版本由父工程统一管(8.0.33)，不用写 version -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- 5. Redis：阶段7给首页商品列表加缓存用 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <!-- 6. MinIO：阶段4做图片上传，它是个开源的对象存储(类似私有版阿里云OSS) -->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>${minio.version}</version>
+        </dependency>
+
+        <!-- 7. JWT：登录后发 token、后续请求校验 token 用。分 api/impl/jackson 三个包 -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>${jjwt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- 8. Lombok：用 @Data 等注解自动生成 getter/setter/构造方法，少写一大堆样板代码 -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- 9. 测试：写单元测试用 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Spring Boot 打包插件：把项目打成可独立运行的 jar 包(阶段9部署用) -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <!-- 打包时排除 Lombok，它只在编译时用，运行不需要 -->
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

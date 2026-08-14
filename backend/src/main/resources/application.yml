@@ -1,0 +1,43 @@
+# =====================================================================
+# 校园二手交易平台 - 主配置文件（非敏感配置，会提交到 GitHub）
+# =====================================================================
+
+# ===== 服务配置 =====
+server:
+  port: 8080                          # 后端启动端口，访问接口用 http://localhost:8080
+
+spring:
+  application:
+    name: campus-secondhand           # 项目名
+  profiles:
+    active: local                     # 激活 local 配置文件(application-local.yml)，里面放数据库密码等敏感信息
+  # 数据源(MySQL连接信息)放在 application-local.yml 里，因为含密码不能传 GitHub
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss  # 接口返回的日期统一格式化成这样
+    time-zone: Asia/Shanghai          # 时区用东八区
+
+# ===== MyBatis-Plus 配置 =====
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true       # 下划线转驼峰：数据库 user_id 自动映射成 Java 的 userId，不用手写映射
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl   # 开发期在控制台打印执行的SQL，方便调试；上线前注释掉
+  global-config:
+    db-config:
+      id-type: auto                            # 主键策略：数据库自增(对应建表时的 AUTO_INCREMENT)
+      logic-delete-field: deleted              # 逻辑删除字段名(对应 product 表的 deleted 字段)
+      logic-delete-value: 1                    # 已删除的值
+      logic-not-delete-value: 0                # 未删除的值
+      # 配置后，调用 mapper.deleteById() 实际执行的是 UPDATE ... SET deleted=1，而非真 DELETE
+      # 查询时也会自动带上 WHERE deleted=0，过滤掉已删除数据
+
+# ===== JWT 配置 =====
+jwt:
+  # JWT 密钥：开发用的固定值。生产环境应改成环境变量注入，不能硬编码。
+  # 注意：jjwt 要求 HS256 算法的密钥至少 32 字节，这串长度够用。
+  secret: campus-secondhand-jwt-secret-key-change-in-production-2026
+  expiration: 86400000                        # token 有效期(毫秒)，86400000 = 24小时
+
+# ===== 日志级别 =====
+logging:
+  level:
+    com.campus.secondhand: debug              # 自己写的代码包，日志级别设 debug，方便调试看细节
