@@ -2,10 +2,10 @@ package com.campus.secondhand.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.campus.secondhand.common.result.Result;
-import com.campus.secondhand.entity.Product;
 import com.campus.secondhand.entity.User;
 import com.campus.secondhand.service.ProductService;
 import com.campus.secondhand.service.UserService;
+import com.campus.secondhand.vo.ProductVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,9 +30,9 @@ public class AdminController {
      * status 不传=全部；0待审核 1已上架 2已下架 3已售出（审核页一般传0）
      */
     @GetMapping("/product/list")
-    public Result<IPage<Product>> productList(@RequestParam(required = false) Integer status,
-                                              @RequestParam(defaultValue = "1") Integer pageNum,
-                                              @RequestParam(defaultValue = "10") Integer pageSize) {
+    public Result<IPage<ProductVO>> productList(@RequestParam(required = false) Integer status,
+                                                @RequestParam(defaultValue = "1") Integer pageNum,
+                                                @RequestParam(defaultValue = "10") Integer pageSize) {
         return Result.success(productService.adminPage(pageNum, pageSize, status));
     }
 

@@ -269,12 +269,17 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      * 管理员查商品列表：和首页列表的区别是不强制 status=1，能看所有状态
      */
     @Override
-    public IPage<Product> adminPage(Integer pageNum, Integer pageSize, Integer status) {
+    public IPage<ProductVO> adminPage(Integer pageNum, Integer pageSize, Integer status) {
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
         // status 不传就查全部状态；传了就只看那种状态（审核页一般传 0 待审核）
         wrapper.eq(status != null, Product::getStatus, status)
                .orderByDesc(Product::getCreateTime);
-        return productMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        Page<Product> productPage = productMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        // 组装成带图片/卖家/分类名的 VO，管理页能直接看图和卖家
+        List<ProductVO> voList = assembleVOList(productPage.getRecords());
+        Page<ProductVO> voPage = new Page<>(productPage.getCurrent(), productPage.getSize(), productPage.getTotal());
+        voPage.setRecords(voList);
+        return voPage;
     }
 
     /**
