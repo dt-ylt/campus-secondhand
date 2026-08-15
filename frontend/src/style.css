@@ -1,4 +1,16 @@
-/* 全局基础样式 */
+/* 全局主题：魅惑粉嫩（奶甜玫瑰风） */
+:root {
+  --pink: #ff6b9d;        /* 主玫瑰粉 */
+  --pink-deep: #e94d87;   /* 深一档 */
+  --rose: #d6336c;        /* 蔷薇红（强调） */
+  --bg: #fff0f5;          /* 淡粉背景 */
+  --card: #ffffff;
+  --text: #4a3a40;        /* 暖深棕 */
+  --text-soft: #9a7a86;   /* 柔和辅助文字 */
+  --border: #ffd6e4;      /* 粉色边框 */
+  --shadow: 0 6px 20px rgba(255, 107, 157, 0.14);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -7,15 +19,31 @@
 
 body {
   font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
-  background: #f5f6f7;
-  color: #333;
+  background: linear-gradient(180deg, #fff7fa 0%, #fff0f5 100%);
+  color: var(--text);
+  min-height: 100vh;
 }
 
 a {
-  color: #409eff;
+  color: var(--pink);
   text-decoration: none;
 }
 
 button {
   cursor: pointer;
+  font-family: inherit;
 }
+
+/* 通用粉色主按钮 */
+.btn-pink {
+  background: linear-gradient(135deg, #ff8fb3, #ff6b9d);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-size: 15px;
+  box-shadow: 0 4px 12px rgba(255, 107, 157, 0.3);
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+.btn-pink:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(255, 107, 157, 0.42); }
+.btn-pink:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }

@@ -6,8 +6,8 @@
         <option value="">全部分类</option>
         <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
       </select>
-      <input v-model="query.keyword" placeholder="搜索商品标题" @keyup.enter="loadList(1)" />
-      <button @click="loadList(1)">搜索</button>
+      <input v-model="query.keyword" placeholder="🔍 搜索商品标题" @keyup.enter="loadList(1)" />
+      <button class="btn-pink" @click="loadList(1)">搜索</button>
       <select v-model="query.orderBy" @change="loadList(1)">
         <option value="time">按最新</option>
         <option value="priceAsc">价格从低到高</option>
@@ -17,7 +17,7 @@
 
     <!-- 商品卡片列表 -->
     <div class="grid">
-      <div v-for="p in products" :key="p.id" class="card">
+      <router-link v-for="p in products" :key="p.id" :to="'/product/' + p.id" class="card">
         <div class="img">
           <img v-if="p.images && p.images.length" :src="p.images[0]" alt="商品图" />
           <span v-else class="noimg">暂无图片</span>
@@ -27,8 +27,8 @@
           <div class="price">¥{{ p.price }}</div>
           <div class="meta">{{ p.categoryName }} · {{ p.sellerName }} · 浏览{{ p.viewCount }}</div>
         </div>
-      </div>
-      <div v-if="!products.length" class="empty">暂无商品</div>
+      </router-link>
+      <div v-if="!products.length" class="empty">🌸 这里还没有商品，去发布一个吧</div>
     </div>
 
     <!-- 分页 -->
@@ -44,21 +44,19 @@
 import { ref, onMounted } from 'vue'
 import api from '../api'
 
-const categories = ref([])   // 分类下拉
-const products = ref([])      // 商品列表
+const categories = ref([])
+const products = ref([])
 const pageNum = ref(1)
 const pages = ref(1)
 const query = ref({ categoryId: '', keyword: '', orderBy: 'time' })
 
 onMounted(async () => {
-  // 进入页面先加载分类（给筛选下拉用），再加载商品
   try {
     categories.value = await api.get('/category/list')
   } catch (e) {}
   loadList(1)
 })
 
-// 加载商品列表（page 是页码）
 async function loadList(page) {
   if (!page) page = 1
   pageNum.value = page
@@ -77,29 +75,40 @@ async function loadList(page) {
 <style scoped>
 .filter-bar {
   display: flex; gap: 8px; align-items: center;
-  background: #fff; padding: 12px; border-radius: 8px; margin-bottom: 16px;
+  background: var(--card); padding: 12px; border-radius: 14px; margin-bottom: 18px;
+  box-shadow: var(--shadow);
 }
-.filter-bar select, .filter-bar input { padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; }
+.filter-bar select, .filter-bar input {
+  padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px;
+  color: var(--text); font-size: 14px; background: #fff;
+}
+.filter-bar select:focus, .filter-bar input:focus {
+  outline: none; border-color: var(--pink); box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.12);
+}
 .filter-bar input { flex: 1; }
-.filter-bar button { padding: 8px 20px; background: #409eff; color: #fff; border: none; border-radius: 4px; }
 
-.grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
-}
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .card {
-  background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.06);
+  display: block; color: var(--text); background: var(--card); border-radius: 14px;
+  overflow: hidden; box-shadow: var(--shadow);
+  transition: transform 0.2s, box-shadow 0.25s;
 }
-.img { height: 160px; background: #f0f2f5; display: flex; align-items: center; justify-content: center; }
+.card:hover { transform: translateY(-4px); box-shadow: 0 10px 26px rgba(255, 107, 157, 0.25); }
+.img { height: 160px; background: linear-gradient(135deg, #fff0f5, #ffe4ec); display: flex; align-items: center; justify-content: center; }
 .img img { width: 100%; height: 100%; object-fit: cover; }
-.noimg { color: #c0c4cc; }
+.noimg { color: var(--text-soft); }
 .info { padding: 12px; }
-.title { font-size: 15px; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.price { color: #f56c6c; font-size: 18px; font-weight: bold; margin-bottom: 6px; }
-.meta { color: #909399; font-size: 12px; }
-.empty { grid-column: 1/-1; text-align: center; color: #909399; padding: 40px; }
+.title { font-size: 15px; margin-bottom: 6px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.price { color: var(--rose); font-size: 18px; font-weight: bold; margin-bottom: 6px; }
+.meta { color: var(--text-soft); font-size: 12px; }
+.empty { grid-column: 1/-1; text-align: center; color: var(--text-soft); padding: 50px; }
 .pager {
-  display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 20px;
+  display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 22px;
 }
-.pager button { padding: 6px 16px; border: 1px solid #dcdfe6; background: #fff; border-radius: 4px; }
-.pager button:disabled { color: #c0c4cc; cursor: not-allowed; }
+.pager button {
+  padding: 7px 18px; border: 1px solid var(--border); background: var(--card);
+  border-radius: 16px; color: var(--pink-deep);
+}
+.pager button:disabled { color: #d9b0bf; cursor: not-allowed; }
+.pager span { color: var(--text-soft); }
 </style>

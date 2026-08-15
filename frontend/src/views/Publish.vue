@@ -1,6 +1,6 @@
 <template>
   <div class="form-card">
-    <h2>发布闲置</h2>
+    <h2>🌸 发布闲置</h2>
     <form @submit.prevent="submit">
       <label>标题 *</label>
       <input v-model="form.title" placeholder="如：九成新机械键盘" />
@@ -40,7 +40,7 @@
         </span>
       </div>
 
-      <button type="submit" :disabled="uploading">{{ uploading ? '上传中...' : '发 布' }}</button>
+      <button type="submit" class="btn-pink" :disabled="uploading">{{ uploading ? '上传中...' : '发 布' }}</button>
     </form>
   </div>
 </template>
@@ -62,7 +62,6 @@ onMounted(async () => {
   try { categories.value = await api.get('/category/list') } catch (e) {}
 })
 
-// 选图后立即上传到 MinIO，把返回的 URL 加进 images 列表
 async function uploadImage(e) {
   const file = e.target.files[0]
   if (!file) return
@@ -74,10 +73,9 @@ async function uploadImage(e) {
     form.images.push(url)
     alert('图片上传成功')
   } catch (err) {
-    // 错误已由拦截器提示
   } finally {
     uploading.value = false
-    e.target.value = ''   // 清空 input，允许重新选择同一张图片
+    e.target.value = ''
   }
 }
 
@@ -105,24 +103,25 @@ async function submit() {
 
 <style scoped>
 .form-card {
-  max-width: 520px; margin: 20px auto; background: #fff;
-  padding: 28px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  max-width: 540px; margin: 20px auto; background: var(--card);
+  padding: 32px; border-radius: 18px; box-shadow: var(--shadow);
+  border-top: 5px solid var(--pink);
 }
-.form-card h2 { text-align: center; margin-bottom: 16px; }
-label { display: block; margin-top: 10px; color: #606266; }
+.form-card h2 { text-align: center; color: var(--rose); margin-bottom: 14px; }
+label { display: block; margin-top: 12px; color: var(--text); font-size: 14px; }
 input, select, textarea {
-  width: 100%; padding: 9px; margin: 4px 0; border: 1px solid #dcdfe6; border-radius: 4px;
+  width: 100%; padding: 10px 12px; margin: 5px 0;
+  border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 14px;
 }
-button {
-  width: 100%; padding: 10px; margin-top: 16px; background: #409eff;
-  color: #fff; border: none; border-radius: 4px; font-size: 16px;
+input:focus, select:focus, textarea:focus {
+  outline: none; border-color: var(--pink); box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.12);
 }
-button:disabled { background: #a0cfff; cursor: not-allowed; }
-.imgs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+button { width: 100%; margin-top: 18px; }
+.imgs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .img-item { position: relative; }
-.img-item img { width: 72px; height: 72px; object-fit: cover; border-radius: 4px; }
+.img-item img { width: 76px; height: 76px; object-fit: cover; border-radius: 10px; }
 .img-item a {
-  position: absolute; top: -6px; right: -6px; background: #f56c6c; color: #fff;
-  width: 18px; height: 18px; border-radius: 50%; text-align: center; line-height: 18px; font-size: 12px;
+  position: absolute; top: -6px; right: -6px; background: var(--rose); color: #fff;
+  width: 20px; height: 20px; border-radius: 50%; text-align: center; line-height: 20px; font-size: 12px;
 }
 </style>

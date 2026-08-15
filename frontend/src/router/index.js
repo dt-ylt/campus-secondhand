@@ -4,6 +4,8 @@ import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import Publish from '../views/Publish.vue'
 import Favorites from '../views/Favorites.vue'
+import Admin from '../views/Admin.vue'
+import ProductDetail from '../views/ProductDetail.vue'
 
 // 路由表：路径 -> 页面组件
 const routes = [
@@ -12,6 +14,8 @@ const routes = [
   { path: '/register', component: Register }, // 注册
   { path: '/publish', component: Publish },   // 发布闲置
   { path: '/favorites', component: Favorites }, // 我的收藏
+  { path: '/admin', component: Admin },          // 管理后台
+  { path: '/product/:id', component: ProductDetail }, // 商品详情（:id 是动态参数，如 /product/4）
 ]
 
 const router = createRouter({

@@ -1,6 +1,7 @@
 <template>
   <div class="auth-card">
-    <h2>注册</h2>
+    <h2>💕 加入我们</h2>
+    <p class="sub">注册一个账号，开启校园闲置之旅</p>
     <form @submit.prevent="handleRegister">
       <label>用户名</label>
       <input v-model="form.username" placeholder="3-20位字符" />
@@ -8,9 +9,9 @@
       <input v-model="form.password" type="password" placeholder="6-20位字符" />
       <label>昵称（选填）</label>
       <input v-model="form.nickname" placeholder="不填默认用用户名" />
-      <button type="submit">注 册</button>
+      <button type="submit" class="btn-pink">注 册</button>
     </form>
-    <p>已有账号？<router-link to="/login">去登录</router-link></p>
+    <p class="foot">已有账号？<router-link to="/login">去登录</router-link></p>
   </div>
 </template>
 
@@ -31,31 +32,29 @@ async function handleRegister() {
     await api.post('/user/register', form)
     alert('注册成功，请登录')
     router.push('/login')
-  } catch (e) {
-    // 错误提示已由拦截器处理
-  }
+  } catch (e) {}
 }
 </script>
 
 <style scoped>
 .auth-card {
-  max-width: 380px;
-  margin: 60px auto;
-  background: #fff;
-  padding: 32px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  max-width: 400px;
+  margin: 50px auto;
+  background: var(--card);
+  padding: 36px 32px;
+  border-radius: 18px;
+  border-top: 5px solid var(--pink);
+  box-shadow: var(--shadow);
 }
-.auth-card h2 { text-align: center; margin-bottom: 20px; }
-label { display: block; margin-top: 8px; color: #606266; }
+.auth-card h2 { text-align: center; color: var(--rose); font-size: 22px; }
+.sub { text-align: center; color: var(--text-soft); margin: 6px 0 18px; }
+label { display: block; margin-top: 10px; color: var(--text); font-size: 14px; }
 input {
-  width: 100%; padding: 10px; margin: 6px 0;
-  border: 1px solid #dcdfe6; border-radius: 4px;
+  width: 100%; padding: 11px 14px; margin: 6px 0;
+  border: 1px solid var(--border); border-radius: 10px;
+  font-size: 15px; color: var(--text);
 }
-button {
-  width: 100%; padding: 10px; margin-top: 12px;
-  background: #67c23a; color: #fff;
-  border: none; border-radius: 4px; font-size: 16px;
-}
-p { text-align: center; margin-top: 16px; }
+input:focus { outline: none; border-color: var(--pink); box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.15); }
+button { width: 100%; margin-top: 16px; }
+.foot { text-align: center; margin-top: 16px; color: var(--text-soft); font-size: 14px; }
 </style>
