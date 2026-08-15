@@ -1,6 +1,8 @@
 package com.campus.secondhand.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.campus.secondhand.common.exception.BusinessException;
 import com.campus.secondhand.common.utils.JwtUtils;
@@ -101,5 +103,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException("用户不存在");
         }
         return user;
+    }
+
+    /**
+     * 管理员查用户列表（按注册时间倒序分页）
+     */
+    @Override
+    public IPage<User> adminPage(Integer pageNum, Integer pageSize) {
+        return baseMapper.selectPage(new Page<>(pageNum, pageSize),
+                new LambdaQueryWrapper<User>().orderByDesc(User::getCreateTime));
+    }
+
+    /**
+     * 管理员封禁/解禁用户：被禁用的用户登录时会被拒绝（login 里有 status 校验）
+     */
+    @Override
+    public void updateStatus(Long userId, Integer status) {
+        if (status == null || (status != 0 && status != 1)) {
+            throw new BusinessException("状态只能是 0(禁用) 或 1(正常)");
+        }
+        User user = baseMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+        user.setStatus(status);
+        baseMapper.updateById(user);
     }
 }

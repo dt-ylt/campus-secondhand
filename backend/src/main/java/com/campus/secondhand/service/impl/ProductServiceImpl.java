@@ -232,6 +232,34 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     /**
+     * 管理员查商品列表：和首页列表的区别是不强制 status=1，能看所有状态
+     */
+    @Override
+    public IPage<Product> adminPage(Integer pageNum, Integer pageSize, Integer status) {
+        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+        // status 不传就查全部状态；传了就只看那种状态（审核页一般传 0 待审核）
+        wrapper.eq(status != null, Product::getStatus, status)
+               .orderByDesc(Product::getCreateTime);
+        return productMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+    }
+
+    /**
+     * 管理员审核商品：改状态（1上架 / 2下架）
+     */
+    @Override
+    public void audit(Long productId, Integer status) {
+        if (status == null || (status != 1 && status != 2)) {
+            throw new BusinessException("审核操作只能是 1(上架) 或 2(下架)");
+        }
+        Product product = productMapper.selectById(productId);
+        if (product == null) {
+            throw new BusinessException("商品不存在");
+        }
+        product.setStatus(status);
+        productMapper.updateById(product);
+    }
+
+    /**
      * 把商品列表组装成 VO 列表（分类名、卖家昵称、图片批量拼装）
      *
      * 性能要点：批量查询，避免 N+1 问题。

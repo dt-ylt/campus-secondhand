@@ -34,4 +34,10 @@ public interface ProductService extends IService<Product> {
 
     /** 按ID批量查商品并组装VO（收藏列表等场景复用） */
     List<ProductVO> listVOByIds(List<Long> productIds);
+
+    /** 管理员查商品列表（可按状态筛，能看所有状态） */
+    IPage<Product> adminPage(Integer pageNum, Integer pageSize, Integer status);
+
+    /** 管理员审核商品（1上架 / 2下架） */
+    void audit(Long productId, Integer status);
 }
