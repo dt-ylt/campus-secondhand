@@ -17,16 +17,22 @@ import com.campus.secondhand.mapper.ProductMapper;
 import com.campus.secondhand.mapper.UserMapper;
 import com.campus.secondhand.service.ProductService;
 import com.campus.secondhand.vo.ProductVO;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -34,7 +40,10 @@ import java.util.stream.Collectors;
  *
  * @Transactional：事务。发布商品要插 product 表 + 插多条 product_image 表，
  * 如果中途失败，已插入的全部回滚，避免出现"有商品没图"的脏数据。
+ *
+ * Redis 缓存（阶段7）：首页商品列表查询先查缓存，命中直接返回；商品数据变更时清空缓存。
  */
+@Slf4j
 @Service
 public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> implements ProductService {
 
@@ -49,6 +58,12 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     /**
      * 发布商品
@@ -78,6 +93,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
         // 3. 保存图片列表
         saveImages(product.getId(), dto.getImages());
+
+        // 4. 商品列表变了，清缓存（否则首页看不到新商品）
+        clearProductListCache();
     }
 
     /**
@@ -114,6 +132,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         productImageMapper.delete(new LambdaQueryWrapper<ProductImage>()
                 .eq(ProductImage::getProductId, productId));
         saveImages(productId, dto.getImages());
+
+        clearProductListCache();
     }
 
     /**
@@ -133,6 +153,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         // 图片记录一并清掉（MinIO 里的文件保留，不影响）
         productImageMapper.delete(new LambdaQueryWrapper<ProductImage>()
                 .eq(ProductImage::getProductId, productId));
+
+        clearProductListCache();
     }
 
     /**
@@ -171,10 +193,18 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     /**
-     * 分页 + 条件筛选查询商品列表（首页用，只查已上架的）
+     * 分页 + 条件筛选查询商品列表（首页用，只查已上架的）—— 带 Redis 缓存
      */
     @Override
     public IPage<ProductVO> pageQuery(ProductQueryDTO dto) {
+        // 0. 先查缓存，命中直接返回，不碰数据库
+        String cacheKey = buildCacheKey(dto);
+        IPage<ProductVO> cached = readPageCache(cacheKey);
+        if (cached != null) {
+            log.debug("首页列表命中缓存: {}", cacheKey);
+            return cached;
+        }
+
         // 1. 拼查询条件。eq/ge/le/like 第一个参数是 boolean：
         //    条件为 true 才把这个筛选拼进 SQL，为 false 就跳过 -> 实现"不传就不筛"
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<Product>()
@@ -204,6 +234,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         // 5. 用 VO 列表 + 原分页信息(total等)组装返回
         Page<ProductVO> voPage = new Page<>(productPage.getCurrent(), productPage.getSize(), productPage.getTotal());
         voPage.setRecords(voList);
+
+        // 6. 写入缓存（TTL 5 分钟），下次同样请求直接命中
+        savePageCache(cacheKey, voPage);
+
         return voPage;
     }
 
@@ -257,6 +291,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
         product.setStatus(status);
         productMapper.updateById(product);
+        // 上架/下架影响首页列表，清缓存
+        clearProductListCache();
     }
 
     /**
@@ -302,6 +338,76 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             voList.add(vo);
         }
         return voList;
+    }
+
+    /**
+     * 拼接首页列表的缓存 key：把查询条件全部拼进去
+     * 不同条件 = 不同 key = 各自缓存（比如"分类1"和"分类2"是两条缓存，互不影响）
+     */
+    private String buildCacheKey(ProductQueryDTO dto) {
+        String category = dto.getCategoryId() == null ? "all" : String.valueOf(dto.getCategoryId());
+        String min = dto.getMinPrice() == null ? "all" : dto.getMinPrice().toPlainString();
+        String max = dto.getMaxPrice() == null ? "all" : dto.getMaxPrice().toPlainString();
+        String kw = dto.getKeyword() == null || dto.getKeyword().isEmpty() ? "all" : dto.getKeyword();
+        String order = dto.getOrderBy() == null ? "time" : dto.getOrderBy();
+        return "product:list:" + category + ":" + min + ":" + max + ":" + kw + ":" + order
+                + ":" + dto.getPageNum() + ":" + dto.getPageSize();
+    }
+
+    /**
+     * 读缓存：命中返回 Page，没命中返回 null
+     * 缓存里存的是"记录列表 + 分页信息"的 JSON，避免 Page 对象序列化的各种坑
+     */
+    private IPage<ProductVO> readPageCache(String cacheKey) {
+        String json = stringRedisTemplate.opsForValue().get(cacheKey);
+        if (json == null) {
+            return null;
+        }
+        try {
+            Map<String, Object> data = objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+            Page<ProductVO> voPage = new Page<>();
+            voPage.setRecords(objectMapper.convertValue(data.get("records"), new TypeReference<List<ProductVO>>() {}));
+            voPage.setTotal(((Number) data.get("total")).longValue());
+            voPage.setSize(((Number) data.get("size")).longValue());
+            voPage.setCurrent(((Number) data.get("current")).longValue());
+            return voPage;
+        } catch (Exception e) {
+            log.warn("读缓存失败，回退查库: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 写缓存：存 5 分钟过期
+     */
+    private void savePageCache(String cacheKey, IPage<ProductVO> voPage) {
+        try {
+            Map<String, Object> cacheMap = new HashMap<>();
+            cacheMap.put("records", voPage.getRecords());
+            cacheMap.put("total", voPage.getTotal());
+            cacheMap.put("size", voPage.getSize());
+            cacheMap.put("current", voPage.getCurrent());
+            stringRedisTemplate.opsForValue().set(cacheKey, objectMapper.writeValueAsString(cacheMap), 5, TimeUnit.MINUTES);
+            log.debug("首页列表已写缓存: {}", cacheKey);
+        } catch (Exception e) {
+            log.warn("写缓存失败: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 清空商品列表缓存（商品增删改审核后调用）
+     * 用 keys 匹配前缀删除。生产环境数据量大时建议用 SCAN 分页扫，道理一样
+     */
+    private void clearProductListCache() {
+        try {
+            Set<String> keys = stringRedisTemplate.keys("product:list:*");
+            if (keys != null && !keys.isEmpty()) {
+                stringRedisTemplate.delete(keys);
+                log.info("已清空商品列表缓存，共 {} 个 key", keys.size());
+            }
+        } catch (Exception e) {
+            log.warn("清缓存失败: {}", e.getMessage());
+        }
     }
 
     /**
