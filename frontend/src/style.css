@@ -1,0 +1,21 @@
+/* 全局基础样式 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  background: #f5f6f7;
+  color: #333;
+}
+
+a {
+  color: #409eff;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+}
