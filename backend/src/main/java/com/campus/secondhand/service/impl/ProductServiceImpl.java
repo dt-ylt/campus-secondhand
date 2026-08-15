@@ -220,6 +220,18 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     /**
+     * 按ID批量查商品并组装VO（收藏列表等场景复用）
+     */
+    @Override
+    public List<ProductVO> listVOByIds(List<Long> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Product> products = productMapper.selectBatchIds(productIds);
+        return assembleVOList(products);
+    }
+
+    /**
      * 把商品列表组装成 VO 列表（分类名、卖家昵称、图片批量拼装）
      *
      * 性能要点：批量查询，避免 N+1 问题。

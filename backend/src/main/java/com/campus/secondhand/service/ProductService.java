@@ -31,4 +31,7 @@ public interface ProductService extends IService<Product> {
 
     /** 我发布的商品列表（含待审核/已下架，管理自己的闲置用） */
     List<ProductVO> myProducts(Long userId);
+
+    /** 按ID批量查商品并组装VO（收藏列表等场景复用） */
+    List<ProductVO> listVOByIds(List<Long> productIds);
 }

@@ -28,7 +28,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/user/login",
                         "/product/list",
                         "/product/{id}",
-                        "/category/list"
+                        "/category/list",
+                        "/comment/list/{productId}"
                 );
     }
 }
