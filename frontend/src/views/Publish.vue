@@ -1,6 +1,10 @@
 <template>
-  <div class="form-card">
-    <h2>🌸 发布闲置</h2>
+  <div>
+    <div class="mini-hero">
+      <h2>🌸 发布闲置</h2>
+      <p>给旧物一个新家，也给别人一份惊喜</p>
+    </div>
+    <div class="form-card">
     <form @submit.prevent="submit">
       <label>标题 *</label>
       <input v-model="form.title" placeholder="如：九成新机械键盘" />
@@ -42,6 +46,7 @@
 
       <button type="submit" class="btn-pink" :disabled="uploading">{{ uploading ? '上传中...' : '发 布' }}</button>
     </form>
+    </div>
   </div>
 </template>
 
@@ -102,6 +107,16 @@ async function submit() {
 </script>
 
 <style scoped>
+.mini-hero {
+  text-align: center;
+  background: linear-gradient(135deg, #ffd9e8, #ffb3cd);
+  border-radius: 18px;
+  padding: 30px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 26px rgba(255, 107, 157, 0.22);
+}
+.mini-hero h2 { color: #fff; font-size: 26px; text-shadow: 0 2px 10px rgba(214, 51, 108, 0.3); }
+.mini-hero p { color: rgba(255, 255, 255, 0.9); margin-top: 6px; font-size: 14px; }
 .form-card {
   max-width: 540px; margin: 20px auto; background: var(--card);
   padding: 32px; border-radius: 18px; box-shadow: var(--shadow);
