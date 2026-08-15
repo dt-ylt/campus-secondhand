@@ -15,6 +15,10 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss  # 接口返回的日期统一格式化成这样
     time-zone: Asia/Shanghai          # 时区用东八区
+  servlet:
+    multipart:                          # 文件上传大小限制
+      max-file-size: 10MB               # 单个文件最大10MB
+      max-request-size: 10MB            # 单次请求最大10MB
 
 # ===== MyBatis-Plus 配置 =====
 mybatis-plus:
